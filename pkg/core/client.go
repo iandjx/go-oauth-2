@@ -6,8 +6,22 @@ type Client struct {
 	gorm.Model
 	ClientSecret string
 	Name         string
-	RedirectURLs []string
-	Scope        []string
+	RedirectURLs []RedirectURL
+	Scopes       []Scope
+}
+
+type RedirectURL struct {
+	gorm.Model
+	Client   Client
+	ClientID uint
+	URL      string
+}
+
+type Scope struct {
+	gorm.Model
+	Client   Client
+	ClientID uint
+	Access   string
 }
 
 type ClientRepository interface {

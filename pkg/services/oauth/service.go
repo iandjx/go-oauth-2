@@ -13,7 +13,7 @@ import (
 
 type Service interface {
 	GenerateToken(ctx context.Context, authCode string, clientID uint, clientSecret string, scope []string, redirectURL string) (string, error)
-	verifyClient(clientID uint, redirectURL string, scope []string) error
+	GenerateAuthCode(ctx context.Context, clientID uint, redirectURL string, clientSecret string, scope []string) (string, error)
 }
 
 type service struct {

@@ -1,6 +1,9 @@
 package sqlite
 
 import (
+	"log"
+
+	"github.com/iandjx/go-oauth-2/pkg/core"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -10,24 +13,18 @@ type Client struct {
 }
 
 func New() (*Client, error) {
-	var err error
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("test.db"))
 
 	if err != nil {
-		return nil, err
+		log.Fatal("could not connect database")
 	}
 
+	if err = db.AutoMigrate(&core.Client{}, &core.User{}, &core.RedirectURL{}, &core.Token{}); err != nil {
+		return nil, err
+	}
 	// Migration to create tables for Order and Item schema
 	// db.AutoMigrate(&model.Gang, &model.Gangster{}, &model.Business{})
 	return &Client{db}, nil
-}
-
-func (c *Client) MigrateSchema(dst ...interface{}) error {
-	err := c.db.AutoMigrate(dst...)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (c *Client) Close() error {

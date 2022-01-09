@@ -9,18 +9,20 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/iandjx/go-oauth-2/pkg/services/client"
+	"github.com/iandjx/go-oauth-2/pkg/services/oauth"
+	"github.com/iandjx/go-oauth-2/pkg/services/user"
 )
 
 const defaultPort = "8080"
 const shutdownTimeout = 10 * time.Second
 
 type Server struct {
-	addr   string
-	router http.Handler
-
-	// GangService     gang.GangService
-	// GangsterService gangster.GangsterService
-	// BusinessService business.BusinessService
+	addr          string
+	router        http.Handler
+	OAuthService  oauth.Service
+	UserServuce   user.Service
+	ClientService client.Service
 }
 
 func New(addr string) *Server {
@@ -30,8 +32,14 @@ func New(addr string) *Server {
 }
 func (s *Server) setupRoutes() {
 
+	userHandler := user.NewHandler(s.UserServuce)
+
 	r := mux.NewRouter()
 	http.Handle("/", r)
+
+	userRouter := r.PathPrefix("/user").Subrouter()
+	userRouter.Handle("/register", userHandler.RegisterUser()).Methods(http.MethodPost)
+
 }
 
 func (s *Server) Run() error {

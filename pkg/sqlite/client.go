@@ -7,8 +7,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"sort"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/iandjx/go-oauth-2/pkg/core"
 	"gorm.io/gorm"
 )
@@ -22,9 +22,20 @@ func NewClientRepository(c *Client, secret string) *ClientRepository {
 	return &ClientRepository{c.db, secret}
 }
 
-func (c *ClientRepository) CreateClient(name string, redirectURLSs []string, scope []string) (*core.Client, error) {
+func (c *ClientRepository) CreateClient(name string, redirectURLS []string, scope []string) (*core.Client, error) {
 	token := randToken()
-	client := core.Client{Name: name, RedirectURLs: redirectURLSs, Scope: scope, ClientSecret: token}
+	var formattedURLs []core.RedirectURL
+	for _, value := range redirectURLS {
+		url := core.RedirectURL{URL: value}
+		formattedURLs = append(formattedURLs, url)
+	}
+	var scopes []core.Scope
+	for _, value := range scope {
+		access := core.Scope{Access: value}
+		scopes = append(scopes, access)
+	}
+
+	client := core.Client{Name: name, RedirectURLs: formattedURLs, Scopes: scopes, ClientSecret: token}
 	tx := c.db.Create(&client)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -52,20 +63,34 @@ func (c *ClientRepository) GetClient(clientID uint, redirectURL string, scope []
 	if !redirectURLFound {
 		return nil, errors.New("invalid redirect url")
 	}
+	var scopes []core.Scope
 
-	if !cmp.Equal(scope, client.Scope) {
+	for _, v := range scope {
+		ns := core.Scope{Access: v}
+		scopes = append(scopes, ns)
+	}
+
+	sort.Slice(scopes, func(i, j int) bool {
+		return scopes[i].Access < scopes[j].Access
+	})
+
+	sort.Slice(client.Scopes, func(i, j int) bool {
+		return scopes[i].Access < scopes[j].Access
+	})
+	if !equalScope(scopes, client.Scopes) {
 		return nil, errors.New("invalid scope")
 	}
 
+	client.ClientSecret = ""
 	return &client, nil
 
 }
 
 // Find takes a slice and looks for an element in it. If found it will
 // return it's key, otherwise it will return -1 and a bool of false.
-func Find(slice []string, val string) (int, bool) {
+func Find(slice []core.RedirectURL, val string) (int, bool) {
 	for i, item := range slice {
-		if item == val {
+		if item.URL == val {
 			return i, true
 		}
 	}
@@ -116,4 +141,18 @@ func decrypt(text, secret string) (string, error) {
 	plainText := make([]byte, len(cipherText))
 	cfb.XORKeyStream(plainText, cipherText)
 	return string(plainText), nil
+}
+
+// Equal tells whether a and b contain the same elements.
+// A nil argument is equivalent to an empty slice.
+func equalScope(a, b []core.Scope) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v.Access != b[i].Access {
+			return false
+		}
+	}
+	return true
 }

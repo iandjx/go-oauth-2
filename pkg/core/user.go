@@ -11,8 +11,11 @@ type User struct {
 }
 
 type Token struct {
-	Type  string
-	Token string
+	gorm.Model
+	UserID uint
+	User   User
+	Type   string
+	Token  string
 }
 
 type UserRepository interface {

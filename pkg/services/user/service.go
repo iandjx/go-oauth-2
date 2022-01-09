@@ -9,7 +9,9 @@ import (
 )
 
 type Service interface {
-	Register(name string, email string, password string) (string, error)
+	Register(p CreateParam) (string, error)
+	Login(email string, password string) (string, error)
+	Logout(ctx context.Context) error
 }
 
 type service struct {
@@ -21,8 +23,8 @@ func NewService(ur core.UserRepository, JWTSecret string) Service {
 	return &service{ur, JWTSecret}
 }
 
-func (s *service) Register(name string, email string, password string) (string, error) {
-	u, err := s.userRepo.CreateUser(name, email, password)
+func (s *service) Register(p CreateParam) (string, error) {
+	u, err := s.userRepo.CreateUser(p.Name, p.Email, p.Password)
 	if err != nil {
 		return "", err
 	}
