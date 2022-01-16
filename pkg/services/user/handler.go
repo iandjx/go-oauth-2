@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/iandjx/go-oauth-2/pkg/httputil"
@@ -23,8 +22,6 @@ func NewHandler(us Service) *Handler {
 
 func (h *Handler) RegisterUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("hit")
-
 		var p CreateParam
 		if err := httputil.DecodeJSON(r, &p); err != nil {
 			httputil.Error400(w, err)
@@ -43,3 +40,6 @@ func (h *Handler) RegisterUser() http.HandlerFunc {
 		w.Write([]byte("OK"))
 	}
 }
+
+// TODO create handler for login
+// TODO create handler for logout

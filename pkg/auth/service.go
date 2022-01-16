@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/iandjx/go-oauth-2/pkg/util"
 )
 
 type AuthService interface {
@@ -27,12 +28,13 @@ func NewService(JWTSecret string) AuthService {
 }
 
 const (
-	authToken = "x-auth"
+	authToken = "auth"
 )
 
 func (s *service) UserFrom(r *http.Request) (*User, error) {
 	hc, _ := r.Cookie(authToken)
 	if hc == nil {
+		util.HandleError(errors.New("missing token from request"))
 		return nil, errors.New("missing token from request")
 	}
 	return s.getUserFromToken(hc.Value)

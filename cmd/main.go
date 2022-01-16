@@ -1,10 +1,14 @@
 package main
 
+// TODO add handleError on all requests
+// TODO add oauth handler
 import (
 	"fmt"
 	"log"
 
+	"github.com/iandjx/go-oauth-2/pkg/auth"
 	"github.com/iandjx/go-oauth-2/pkg/config"
+	"github.com/iandjx/go-oauth-2/pkg/services/client"
 	"github.com/iandjx/go-oauth-2/pkg/services/user"
 	"github.com/iandjx/go-oauth-2/pkg/sqlite"
 	"github.com/iandjx/go-oauth-2/server"
@@ -38,10 +42,15 @@ func (a *App) setup() error {
 	}
 	userRepo := sqlite.NewUserRepository(db)
 	userService := user.NewService(userRepo, a.cfg.JWTSecret)
-	// userHandler := user.NewHandler(userService)
+	clientRepo := sqlite.NewClientRepository(db, a.cfg.JWTSecret)
+	clientService := client.NewService(clientRepo, a.cfg.JWTSecret)
+
+	authService := auth.NewService(a.cfg.JWTSecret)
 
 	srv := server.New(a.cfg.Addr)
 	srv.UserServuce = userService
+	srv.ClientService = clientService
+	srv.AuthService = authService
 
 	a.srv = srv
 	a.closeFn = func() error {

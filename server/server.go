@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/iandjx/go-oauth-2/pkg/auth"
 	"github.com/iandjx/go-oauth-2/pkg/services/client"
 	"github.com/iandjx/go-oauth-2/pkg/services/oauth"
 	"github.com/iandjx/go-oauth-2/pkg/services/user"
@@ -23,6 +24,7 @@ type Server struct {
 	OAuthService  oauth.Service
 	UserServuce   user.Service
 	ClientService client.Service
+	AuthService   auth.AuthService
 }
 
 func New(addr string) *Server {
@@ -33,12 +35,17 @@ func New(addr string) *Server {
 func (s *Server) setupRoutes() {
 
 	userHandler := user.NewHandler(s.UserServuce)
+	clientHandler := client.NewHandler(s.ClientService)
 
 	r := mux.NewRouter()
 	http.Handle("/", r)
 
 	userRouter := r.PathPrefix("/user").Subrouter()
 	userRouter.Handle("/register", userHandler.RegisterUser()).Methods(http.MethodPost)
+
+	clientRouter := r.PathPrefix("/client").Subrouter()
+	clientRouter.Use(auth.Middleware(s.AuthService))
+	clientRouter.Handle("/create", clientHandler.CreateClient()).Methods(http.MethodPost)
 
 }
 

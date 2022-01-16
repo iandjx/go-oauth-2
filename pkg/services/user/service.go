@@ -24,6 +24,7 @@ func NewService(ur core.UserRepository, JWTSecret string) Service {
 }
 
 func (s *service) Register(p CreateParam) (string, error) {
+	// TODO check if user is already registered
 	u, err := s.userRepo.CreateUser(p.Name, p.Email, p.Password)
 	if err != nil {
 		return "", err

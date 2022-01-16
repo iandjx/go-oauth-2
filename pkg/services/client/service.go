@@ -8,7 +8,7 @@ import (
 )
 
 type Service interface {
-	CreateClient(ctx context.Context, name string, redirectURLs []string, scope []string) (*core.Client, error)
+	CreateClient(ctx context.Context, p CreateParam) (*core.Client, error)
 }
 
 type service struct {
@@ -20,13 +20,13 @@ func NewService(cr core.ClientRepository, JWTSecret string) Service {
 	return &service{cr, JWTSecret}
 }
 
-func (s *service) CreateClient(ctx context.Context, name string, redirectURLs []string, scope []string) (*core.Client, error) {
+func (s *service) CreateClient(ctx context.Context, p CreateParam) (*core.Client, error) {
 	au := auth.FromContext(ctx)
 	if au == nil || au.ID == 0 {
 		err := auth.ErrAuthRequired
 		return nil, err
 	}
-	c, err := s.clientRepo.CreateClient(name, redirectURLs, scope)
+	c, err := s.clientRepo.CreateClient(p.Name, p.RedirectURLs, p.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -47,3 +47,5 @@ func (s *service) GetClient(ctx context.Context, clientID uint, redirectURL stri
 	c.ClientSecret = ""
 	return c, nil
 }
+
+// TODO create func to delete client

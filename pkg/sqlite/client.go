@@ -1,15 +1,13 @@
 package sqlite
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"sort"
 
 	"github.com/iandjx/go-oauth-2/pkg/core"
+	"github.com/iandjx/go-oauth-2/pkg/util"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +38,7 @@ func (c *ClientRepository) CreateClient(name string, redirectURLS []string, scop
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-	et, err := encrypt(token, c.Secret)
+	et, err := util.Encrypt(token, c.Secret)
 	if err != nil {
 		return nil, err
 	}
@@ -101,46 +99,6 @@ func randToken() string {
 	b := make([]byte, 20)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)
-}
-
-var bytes = []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05}
-
-func encode(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-// Encrypt method is to encrypt or hide any classified text
-func encrypt(text, secret string) (string, error) {
-	block, err := aes.NewCipher([]byte(secret))
-	if err != nil {
-		return "", err
-	}
-	plainText := []byte(text)
-	cfb := cipher.NewCFBEncrypter(block, bytes)
-	cipherText := make([]byte, len(plainText))
-	cfb.XORKeyStream(cipherText, plainText)
-	return encode(cipherText), nil
-}
-
-func decode(s string) []byte {
-	data, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
-// Decrypt method is to extract back the encrypted text
-func decrypt(text, secret string) (string, error) {
-	block, err := aes.NewCipher([]byte(secret))
-	if err != nil {
-		return "", err
-	}
-	cipherText := decode(text)
-	cfb := cipher.NewCFBDecrypter(block, bytes)
-	plainText := make([]byte, len(cipherText))
-	cfb.XORKeyStream(plainText, cipherText)
-	return string(plainText), nil
 }
 
 // Equal tells whether a and b contain the same elements.

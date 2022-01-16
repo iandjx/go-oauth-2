@@ -19,7 +19,7 @@ func New() (*Client, error) {
 		log.Fatal("could not connect database")
 	}
 
-	if err = db.AutoMigrate(&core.Client{}, &core.User{}, &core.RedirectURL{}, &core.Token{}); err != nil {
+	if err = db.AutoMigrate(&core.Client{}, &core.User{}, &core.RedirectURL{}, &core.Token{}, &core.Scope{}); err != nil {
 		return nil, err
 	}
 	// Migration to create tables for Order and Item schema
